@@ -1,0 +1,14 @@
+# Build artifacts
+out/
+cache/
+broadcast/
+.kontrol/
+
+# Proof state / checkpoints
+*.tgz
+prove*.log
+build_output.log
+verdicts_*.txt
+
+# Editor / OS
+.DS_Store

@@ -1,0 +1,29 @@
+[build.default]
+foundry-project-root = '.'
+regen                = false
+rekompile            = false
+
+[prove.default]
+foundry-project-root       = '.'
+max-depth                  = 50000
+max-iterations             = 100000
+reinit                     = false
+workers                    = 2
+failure-information        = true
+counterexample-information = true
+smt-timeout                = 30000
+smt-retry-limit            = 2
+break-on-calls             = false
+run-constructor            = false
+no-stack-checks            = true
+
+[show.default]
+foundry-project-root = '.'
+use-hex-encoding     = false
+
+[view-kcfg.default]
+foundry-project-root = '.'
+use-hex-encoding     = false
+omit-code-cells      = true
+omit-interim-cells   = true
+omit-cost-cells      = true
