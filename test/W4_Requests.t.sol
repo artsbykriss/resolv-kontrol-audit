@@ -28,7 +28,7 @@ contract W4_Requests_Test is Test {
     MockERC20 internal treasury;
 
     address internal provider;
-    address internal service = address(0x5E12);
+    address internal constant service = address(0x5E12);
     uint256 internal constant MAX = type(uint256).max;
 
     function setUp() public {

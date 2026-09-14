@@ -27,7 +27,7 @@ contract W6_OFT_Test is Test {
     MockLZEndpoint internal endpoint;
     SimpleOFTAdapter internal oft;
 
-    address internal alice = address(0xA11CE);
+    address internal constant alice = address(0xA11CE);
     uint256 internal constant MAX = type(uint256).max;
     uint32 internal constant DST = 30111;
     uint256 internal constant DUST = 1e12; // 10^(18 - sharedDecimals 6)

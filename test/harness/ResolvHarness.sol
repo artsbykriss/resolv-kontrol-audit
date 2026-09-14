@@ -17,9 +17,9 @@ contract ResolvHarness is Test {
     StUSR internal stUSR;
     WstUSR internal wstUSR;
 
-    address internal alice = address(0xA11CE);
-    address internal bob = address(0xB0B);
-    address internal attacker = address(0xBAD);
+    address internal constant alice = address(0xA11CE);
+    address internal constant bob = address(0xB0B);
+    address internal constant attacker = address(0xBAD);
 
     uint256 internal constant MAX = type(uint256).max;
 

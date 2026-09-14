@@ -21,9 +21,9 @@ contract UsrRedemption_Test is Test {
     MockUsrPriceStorage internal ps;
     UsrRedemptionExtension internal ext;
 
-    address internal service = address(0x5E12);
-    address internal alice = address(0xA11CE);
-    address internal receiver = address(0xBEEF);
+    address internal constant service = address(0x5E12);
+    address internal constant alice = address(0xA11CE);
+    address internal constant receiver = address(0xBEEF);
     bytes32 internal SERVICE;
 
     uint256 internal constant BOUND = 1e30;

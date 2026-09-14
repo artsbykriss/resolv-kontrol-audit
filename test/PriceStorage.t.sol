@@ -8,7 +8,7 @@ import {UsrPriceStorage} from "contracts/UsrPriceStorage.sol";
 /// W8 — price storage bounds (gates W1).
 contract PriceStorage_Test is Test {
     UsrPriceStorage internal ps;
-    address internal service = address(0x5E12);
+    address internal constant service = address(0x5E12);
     bytes32 internal SERVICE;
 
     uint256 internal constant T0 = 1_800_000_000;

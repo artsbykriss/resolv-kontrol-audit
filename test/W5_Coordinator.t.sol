@@ -43,7 +43,7 @@ contract W5_Coordinator_Test is Test {
     ExternalRequestsCoordinator internal coord;
 
     address internal provider;
-    address internal service = address(0x5E12);
+    address internal constant service = address(0x5E12);
     uint256 internal constant MAX = type(uint256).max;
 
     function setUp() public {

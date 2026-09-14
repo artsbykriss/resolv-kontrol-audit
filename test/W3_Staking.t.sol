@@ -13,7 +13,7 @@ contract W3_Staking_Test is Test {
     ResolvStakingSilo internal silo;
     ResolvStakingV2 internal staking;
 
-    address internal alice = address(0xA11CE);
+    address internal constant alice = address(0xA11CE);
     uint256 internal constant MAX = type(uint256).max;
     uint256 internal constant COOLDOWN = 14 days;
     uint256 internal constant T0 = 1_800_000_000;
