@@ -87,6 +87,11 @@ jobs:
           BUDGET=$(( 300 * 60 / NTESTS )); [ "$BUDGET" -gt 2100 ] && BUDGET=2100
           while IFS= read -r t; do
             [ -z "$t" ] && continue
+            # The Kontrol container runs `kontrol prove` as a NON-root user while
+            # `out/` was created by root (build) and re-chowned to the runner
+            # between tests. Without re-opening perms the next run cannot mkdir
+            # under `out/proofs` → `PermissionError: 'out/proofs/<id>:0'`.
+            chmod -R a+rwX . 2>/dev/null || true
             echo "=== ${SUITE}: $t ===" | tee -a "$V" "prove_${SUITE}.log"
             timeout -k 30s "${BUDGET}s" docker run --rm -v "$PWD":/work -w /work \
               "$KONTROL_IMAGE" \
