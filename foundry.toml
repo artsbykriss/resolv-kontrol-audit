@@ -14,4 +14,6 @@ remappings = [
   "contracts/=contracts/",
   "@aave/core-v3/contracts/=lib/aave-core-v3/contracts/",
   "@chainlink/contracts/=lib/chainlink/contracts/",
+  "@layerzerolabs/=node_modules/@layerzerolabs/",
+  "solidity-bytes-utils/=node_modules/solidity-bytes-utils/",
 ]

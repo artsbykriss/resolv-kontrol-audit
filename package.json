@@ -1,0 +1,10 @@
+{
+  "name": "resolv-kontrol-audit-deps",
+  "private": true,
+  "dependencies": {
+    "@layerzerolabs/oft-evm-upgradeable": "*",
+    "@layerzerolabs/oapp-evm-upgradeable": "*",
+    "@layerzerolabs/oft-evm": "*",
+    "@layerzerolabs/oapp-evm": "*"
+  }
+}

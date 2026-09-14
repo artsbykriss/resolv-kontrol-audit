@@ -1,3 +1,6 @@
+# Dependencies (installed in CI via npm)
+node_modules/
+
 # Build artifacts
 out/
 cache/

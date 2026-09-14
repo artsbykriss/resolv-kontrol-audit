@@ -2,13 +2,14 @@ name: kontrol
 
 # Resolv (USR) symbolic audit — Kontrol proof matrix.
 #
-# One job per test suite. Each job builds with the pinned Kontrol image
-# (ubuntu-jammy-1.0.255 — the same one used across the campaign) and then runs
-# one `kontrol prove` invocation per suite, writing an explicit verdict line so
-# a timeout never erases results.
+# One job per test suite. Each job installs the LayerZero JS deps (needed to
+# compile the OFT adapter), then builds with the pinned Kontrol image
+# (ubuntu-jammy-1.0.255 — the same one used across the campaign) and runs
+# `kontrol prove` with an explicit verdict line so a timeout never erases
+# results.
 #
-# Run this from the `artsbykriss` account/repo so it does not touch the main
-# campaign's runners or quota.
+# This repo lives under `artsbykriss` so it never touches the main campaign's
+# runners or quota.
 
 on:
   workflow_dispatch:
@@ -24,7 +25,7 @@ jobs:
     timeout-minutes: 350
     strategy:
       fail-fast: false
-      max-parallel: 6
+      max-parallel: 8
       matrix:
         suite:
           - StUSR_Test
@@ -33,8 +34,27 @@ jobs:
           - W4_Requests_Test
           - W3_Staking_Test
           - PriceStorage_Test
+          - W5_Coordinator_Test
+          - W6_OFT_Test
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install LayerZero JS dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
+          ls node_modules/@layerzerolabs
+
+      # The Kontrol container runs as root and writes `out/`; the bind-mounted
+      # workspace must be world-writable, otherwise `kontrol build` fails with
+      # `"/work/out": Permission denied`. This must happen BEFORE the build.
+      - name: Make workspace writable
+        run: |
+          chmod -R a+rwX .
+          mkdir -p out && chmod -R a+rwX out
 
       - name: kontrol build (docker)
         run: |
@@ -67,7 +87,7 @@ jobs:
           else
             echo "=== ${{ matrix.suite }} INCOMPLETE (rc=$rc; kcfg checkpointed) ===" >> "$V"
           fi
-          sudo chown -R "$(id -u):$(id -g)" .
+          sudo chown -R "$(id -u):$(id -g)" . || true
           if [ -d out/proofs ]; then
             tar -czf "kcfg_${{ matrix.suite }}.tgz" -C out proofs || true
           fi
