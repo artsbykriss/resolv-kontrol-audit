@@ -84,7 +84,7 @@ contract W5_Coordinator_Test is Test {
 
     /// W5-P4: only SERVICE_ROLE can drive the coordinator.
     function test_W5P4_onlyService(uint256 amount) public {
-        amount = bound(amount, 1, 1e27);
+        vm.assume(amount >= 1 && amount <= 1e27);
         uint256 id = _usrRequest(amount, 0);
         vm.prank(address(0xBAD));
         vm.expectRevert();
@@ -94,7 +94,7 @@ contract W5_Coordinator_Test is Test {
     /// W5-P3: when the deposit is a protocol token, the coordinator burns exactly
     /// the deposited amount from the treasury (offsetting the mint).
     function test_W5P3_protocolDepositBurnedFromTreasury(uint256 amount) public {
-        amount = bound(amount, 1, 1e27);
+        vm.assume(amount >= 1 && amount <= 1e27);
         uint256 id = _usrRequest(amount, 0);
 
         // treasury starts with no USR; manager will forward the deposit to it
@@ -112,7 +112,7 @@ contract W5_Coordinator_Test is Test {
 
     /// W5-P1: the payout always goes to the request provider, never a chosen recipient.
     function test_W5P1_recipientIsProvider(uint256 amount) public {
-        amount = bound(amount, 1, 1e27);
+        vm.assume(amount >= 1 && amount <= 1e27);
         uint256 id = _usrRequest(amount, 0);
         vm.prank(service);
         coord.completeMint(keccak256("k"), id, address(usr), amount);
@@ -121,7 +121,7 @@ contract W5_Coordinator_Test is Test {
 
     /// W5-P2: the burn path grants the manager an allowance that is fully consumed.
     function test_W5P2_burnAllowanceConsumed(uint256 amount) public {
-        amount = bound(amount, 1, 1e27);
+        vm.assume(amount >= 1 && amount <= 1e27);
         // provider burns USR and withdraws USR (protocol token) from treasury
         usr.mint(provider, amount);
         vm.prank(provider);
@@ -139,7 +139,7 @@ contract W5_Coordinator_Test is Test {
 
     /// W5-P5: a non-protocol deposit does not mint/burn any protocol token.
     function test_W5P5_nonProtocolDepositNoBurn(uint256 amount) public {
-        amount = bound(amount, 1, 1e27);
+        vm.assume(amount >= 1 && amount <= 1e27);
         MockERC20 other = new MockERC20("Other", "OTH", 18);
         usrMgr.addAllowedToken(address(other));
         other.mint(provider, amount);

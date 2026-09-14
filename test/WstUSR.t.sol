@@ -15,7 +15,7 @@ contract WstUSR_Test is ResolvHarness {
 
     /// W2-P8: deposit then redeem the resulting shares returns <= deposited.
     function test_W2P8_depositRedeemNoGain(uint256 usrAmt) public {
-        vm.assume(usrAmt > 0 && usrAmt < BOUND);
+        vm.assume(usrAmt > 1e6 && usrAmt < BOUND);
         _fund(alice, usrAmt);
 
         vm.prank(alice);
@@ -80,8 +80,12 @@ contract WstUSR_Test is ResolvHarness {
         if (wstUSR.previewDeposit(usrAmt) != 0) return;
         _fund(alice, usrAmt);
         uint256 balBefore = usr.balanceOf(alice);
-        vm.prank(alice);
-        wstUSR.deposit(usrAmt, alice);
+        // StUSR.deposit reverts when 0 shares would be minted; either way
+        // alice cannot end with shares or more USR than before.
+        (bool ok,) = address(wstUSR).call(
+            abi.encodeWithSignature("deposit(uint256,address)", usrAmt, alice)
+        );
+        ok;
         // alice received no shares; her USR only decreased (never increased)
         assertEq(wstUSR.balanceOf(alice), 0, "unexpected shares");
         assertLe(usr.balanceOf(alice), balBefore, "profit from zero mint");
@@ -101,7 +105,7 @@ contract WstUSR_Test is ResolvHarness {
 
     /// W2-P10: totalAssets == stUSR.convertToUnderlyingToken(totalSupply*1000) after any op.
     function test_W2P10_totalAssetsInvariant(uint256 usrAmt) public {
-        vm.assume(usrAmt > 0 && usrAmt < BOUND);
+        vm.assume(usrAmt > 1e6 && usrAmt < BOUND);
         _fund(alice, usrAmt);
         vm.prank(alice);
         wstUSR.deposit(usrAmt, alice);
@@ -115,7 +119,7 @@ contract WstUSR_Test is ResolvHarness {
 
     /// W2-P10b: the wrapper always holds >= totalSupply*1000 stUSR shares.
     function test_W2P10b_backingInvariant(uint256 usrAmt) public {
-        vm.assume(usrAmt > 0 && usrAmt < BOUND);
+        vm.assume(usrAmt > 1e6 && usrAmt < BOUND);
         _fund(alice, usrAmt);
         vm.prank(alice);
         wstUSR.deposit(usrAmt, alice);

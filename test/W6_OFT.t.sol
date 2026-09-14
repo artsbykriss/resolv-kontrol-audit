@@ -71,7 +71,7 @@ contract W6_OFT_Test is Test {
 
     /// W6-P1: a sender with no balance cannot move tokens.
     function test_W6P1_sendInsufficientBalanceReverts(uint256 amount) public {
-        amount = bound(amount, DUST, 1e30);
+        vm.assume(amount >= DUST && amount <= 1e30);
         MessagingFee memory fee = MessagingFee(0, 0);
         vm.prank(alice);
         vm.expectRevert();
@@ -80,7 +80,7 @@ contract W6_OFT_Test is Test {
 
     /// W6-P1b: a sender with balance but no allowance cannot move tokens.
     function test_W6P1b_sendInsufficientAllowanceReverts(uint256 amount) public {
-        amount = bound(amount, DUST, 1e30);
+        vm.assume(amount >= DUST && amount <= 1e30);
         token.mint(alice, amount);
         MessagingFee memory fee = MessagingFee(0, 0);
         vm.prank(alice);
@@ -90,7 +90,7 @@ contract W6_OFT_Test is Test {
 
     /// W6-P1c: a successful send locks exactly `amountLD` (minus dust) in the adapter.
     function test_W6P1c_sendLocksExactAmount(uint256 amount) public {
-        amount = bound(amount, DUST, 1e30);
+        vm.assume(amount >= DUST && amount <= 1e30);
         uint256 sent = amount - (amount % DUST);
         token.mint(alice, amount);
         vm.prank(alice);

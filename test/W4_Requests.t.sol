@@ -54,7 +54,7 @@ contract W4_Requests_Test is Test {
 
     /// W4-P6 (P): a user can always cancel a pending swap and recover the deposit.
     function test_W4P6_requestCancelRecoversDeposit(uint256 amount) public {
-        amount = bound(amount, 1, 1_000_000e6);
+        vm.assume(amount >= 1 && amount <= 1_000_000e6);
         TheCounter c = _counter();
         usdc.mint(provider, amount);
         vm.prank(provider);
@@ -74,8 +74,8 @@ contract W4_Requests_Test is Test {
     /// amount to the deposited amount. A compromised SERVICE_ROLE (the 2026-03
     /// exploit) mints arbitrary USR. This test asserts the bug is present.
     function test_W4P5_completeSwap_missingBound_KNOWNVULN(uint256 amount, uint256 minted) public {
-        amount = bound(amount, 1, 1_000_000e6);
-        minted = bound(minted, 1_000e18, 1_000_000_000e18);
+        vm.assume(amount >= 1 && amount <= 1_000_000e6);
+        vm.assume(minted >= 1_000e18 && minted <= 1_000_000_000e18);
         TheCounter c = _counter();
         usdc.mint(provider, amount);
         vm.prank(provider);
@@ -95,7 +95,7 @@ contract W4_Requests_Test is Test {
 
     /// W4-P5b (control): completion respects the request's own minExpectedAmount floor.
     function test_W4P5b_minExpectedEnforced(uint256 amount) public {
-        amount = bound(amount, 1, 1_000_000e6);
+        vm.assume(amount >= 1 && amount <= 1_000_000e6);
         TheCounter c = _counter();
         usdc.mint(provider, amount);
         vm.prank(provider);
@@ -126,7 +126,7 @@ contract W4_Requests_Test is Test {
 
     /// W4-P3: a mint request can be completed at most once.
     function test_W4P3_noDoubleComplete(uint256 amount) public {
-        amount = bound(amount, 1, 1_000_000e6);
+        vm.assume(amount >= 1 && amount <= 1_000_000e6);
         (UsrExternalRequestsManager m,) = _manager();
         usdc.mint(provider, amount);
         vm.prank(provider);
@@ -144,8 +144,8 @@ contract W4_Requests_Test is Test {
     /// W4-P1: KNOWN VULNERABILITY — `completeMint` mints an arbitrary `_mintAmount`
     /// (only floored by the attacker-chosen `minMintAmount`), no ratio to deposit.
     function test_W4P1_completeMint_missingBound_KNOWNVULN(uint256 amount, uint256 minted) public {
-        amount = bound(amount, 1, 1_000_000e6);
-        minted = bound(minted, 1_000e18, 1_000_000_000e18);
+        vm.assume(amount >= 1 && amount <= 1_000_000e6);
+        vm.assume(minted >= 1_000e18 && minted <= 1_000_000_000e18);
         (UsrExternalRequestsManager m,) = _manager();
         usdc.mint(provider, amount);
         vm.prank(provider);
@@ -162,8 +162,8 @@ contract W4_Requests_Test is Test {
     /// W4-P2: KNOWN VULNERABILITY — `completeBurn` pays an arbitrary `_withdrawalAmount`
     /// out of the treasury for a burned USR request.
     function test_W4P2_completeBurn_overWithdraw_KNOWNVULN(uint256 burnAmt, uint256 withdraw) public {
-        burnAmt = bound(burnAmt, 1, 1_000_000e18);
-        withdraw = bound(withdraw, 1_000e6, 1_000_000_000e6);
+        vm.assume(burnAmt >= 1 && burnAmt <= 1_000_000e18);
+        vm.assume(withdraw >= 1_000e6 && withdraw <= 1_000_000_000e6);
         (UsrExternalRequestsManager m,) = _manager();
         usdc.mint(address(treasury), 1_000_000_000e6);
         vm.prank(address(treasury));
@@ -191,7 +191,7 @@ contract W4_Requests_Test is Test {
 
     /// W4-P4b (P): a non-whitelisted provider cannot create a mint request.
     function test_W4P4b_whitelistGate(uint256 amount) public {
-        amount = bound(amount, 1, 1_000_000e6);
+        vm.assume(amount >= 1 && amount <= 1_000_000e6);
         (UsrExternalRequestsManager m,) = _manager();
         usdc.mint(address(0xDEAD), amount);
         vm.prank(address(0xDEAD));

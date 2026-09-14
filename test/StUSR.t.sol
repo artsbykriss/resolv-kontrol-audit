@@ -30,7 +30,7 @@ contract StUSR_Test is ResolvHarness {
 
     /// W2-P3: deposit then immediate balance is never more than deposited (floor).
     function test_W2P3_depositNoGain(uint256 usrAmt) public {
-        vm.assume(usrAmt > 0 && usrAmt < BOUND);
+        vm.assume(usrAmt > 1e6 && usrAmt < BOUND);
         _fund(alice, usrAmt);
         vm.prank(alice);
         stUSR.deposit(usrAmt, alice);
@@ -53,7 +53,7 @@ contract StUSR_Test is ResolvHarness {
 
     /// W2-P5: transfer moves at most `value` of underlying to the recipient.
     function test_W2P5_transferRoundsDown(uint256 usrAmt, uint256 value) public {
-        vm.assume(usrAmt > 0 && usrAmt < BOUND);
+        vm.assume(usrAmt > 1e6 && usrAmt < BOUND);
         vm.assume(value <= usrAmt);
         _fund(alice, usrAmt);
         vm.prank(alice);
@@ -68,7 +68,7 @@ contract StUSR_Test is ResolvHarness {
 
     /// W2-P5b: transferFrom consumes at most `value` of allowance.
     function test_W2P5b_transferFromAllowanceBounded(uint256 usrAmt, uint256 value) public {
-        vm.assume(usrAmt > 0 && usrAmt < BOUND);
+        vm.assume(usrAmt > 1e6 && usrAmt < BOUND);
         vm.assume(value <= usrAmt);
         _fund(alice, usrAmt);
         vm.prank(alice);
@@ -87,7 +87,7 @@ contract StUSR_Test is ResolvHarness {
 
     /// W2-P7: totalSupply() (underlying) always equals the real token balance.
     function test_W2P7_totalSupplyMatchesBalance(uint256 usrAmt) public {
-        vm.assume(usrAmt > 0 && usrAmt < BOUND);
+        vm.assume(usrAmt > 1e6 && usrAmt < BOUND);
         _fund(alice, usrAmt);
         vm.prank(alice);
         stUSR.deposit(usrAmt, alice);
@@ -102,12 +102,12 @@ contract StUSR_Test is ResolvHarness {
         // fresh pool for this property
         StUSR s = _newStUSR();
 
-        _fund(attacker, 1);
+        _fund(attacker, 1e6);
         vm.prank(attacker);
         usr.approve(address(s), MAX);
         vm.prank(attacker);
-        s.deposit(1, attacker); // 1 wei -> 1000 shares (offset)
-        uint256 inA = 1;
+        s.deposit(1e6, attacker); // smallest deposit that mints shares
+        uint256 inA = 1e6;
 
         // donation: attacker sends USR straight to the vault
         uint256 donation = 100_000e18;

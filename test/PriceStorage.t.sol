@@ -29,8 +29,8 @@ contract PriceStorage_Test is Test {
 
     /// W8-P1: price formula — capped at 1e18, else reserves*1e18/supply.
     function test_W8P1_priceFormula(uint256 supply, uint256 reserves) public {
-        supply = bound(supply, 1, 1e30);
-        reserves = bound(reserves, 1, 1e30);
+        vm.assume(supply >= 1 && supply <= 1e30);
+        vm.assume(reserves >= 1 && reserves <= 1e30);
         _set(bytes32("k"), supply, reserves);
         uint256 expected = reserves >= supply ? 1e18 : (reserves * 1e18) / supply;
         (uint256 p,,,) = ps.prices(bytes32("k"));

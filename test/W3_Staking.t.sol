@@ -43,7 +43,7 @@ contract W3_Staking_Test is Test {
 
     /// W3-P1: deposit -> initiateWithdrawal -> withdraw returns exactly the principal.
     function test_W3P1_roundTripNoGain(uint256 amount) public {
-        amount = bound(amount, 1, 1e30);
+        vm.assume(amount >= 1 && amount <= 1e30);
         uint256 before = resolv.balanceOf(alice);
         _stake(alice, amount);
         assertEq(staking.balanceOf(alice), amount, "shares != deposit");
@@ -61,7 +61,7 @@ contract W3_Staking_Test is Test {
 
     /// W3-P2: the silo always holds at least the sum of pending withdrawals.
     function test_W3P2_siloSolvency(uint256 amount) public {
-        amount = bound(amount, 1, 1e30);
+        vm.assume(amount >= 1 && amount <= 1e30);
         _stake(alice, amount);
         vm.prank(alice);
         staking.initiateWithdrawal(amount);
@@ -70,7 +70,7 @@ contract W3_Staking_Test is Test {
 
     /// W3-P6: withdrawal before the cooldown elapses reverts.
     function test_W3P6_cooldownEnforced(uint256 amount) public {
-        amount = bound(amount, 1, 1e30);
+        vm.assume(amount >= 1 && amount <= 1e30);
         _stake(alice, amount);
         vm.prank(alice);
         staking.initiateWithdrawal(amount);
@@ -81,8 +81,8 @@ contract W3_Staking_Test is Test {
 
     /// W3-P6b: cannot withdraw more than the pending amount.
     function test_W3P6b_noOverWithdraw(uint256 amount, uint256 extra) public {
-        amount = bound(amount, 1, 1e30);
-        extra = bound(extra, 1, 1e30);
+        vm.assume(amount >= 1 && amount <= 1e30);
+        vm.assume(extra >= 1 && extra <= 1e30);
         _stake(alice, amount + extra);
         vm.prank(alice);
         staking.initiateWithdrawal(amount);

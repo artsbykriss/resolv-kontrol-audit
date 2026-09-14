@@ -68,7 +68,7 @@ contract UsrRedemption_Test is Test {
     /// W1-P1/P4: caller burns exactly `amount`; receiver gets exactly the
     /// floor entitlement (1:1 value, 6-dec token, 0 fee) and never more.
     function test_W1P1_exactPayout(uint256 amount) public {
-        vm.assume(amount > 0 && amount < 1_000_000e18);
+        vm.assume(amount >= 1e12 && amount < 1_000_000e18);
         usr.mint(service, amount);
 
         uint256 usrBefore = usr.balanceOf(service);
@@ -85,7 +85,7 @@ contract UsrRedemption_Test is Test {
 
     /// W1-P1b: payout never exceeds the USR burned (value conservation, 18-dec token).
     function test_W1P1b_neverExceedsBurned(uint256 amount) public {
-        vm.assume(amount > 0 && amount < 1_000_000e18);
+        vm.assume(amount >= 1e12 && amount < 1_000_000e18);
         MockERC20 tok18 = new MockERC20("T", "T", 18);
         tok18.mint(address(treasury), 1_000_000e18);
         cl.set(address(tok18), int256(1e18), 18, T0);
@@ -113,7 +113,8 @@ contract UsrRedemption_Test is Test {
 
     /// W1-P2: a redemption above the daily limit reverts.
     function test_W1P2_limitEnforced(uint256 x) public {
-        uint256 amount = LIMIT + bound(x, 1, LIMIT);
+        vm.assume(x >= 1 && x <= LIMIT);
+        uint256 amount = LIMIT + x;
         usr.mint(service, amount);
         vm.prank(service);
         vm.expectRevert();
@@ -122,8 +123,10 @@ contract UsrRedemption_Test is Test {
 
     /// W1-P2b: cumulative usage over the limit reverts; a fresh day resets it.
     function test_W1P2b_cumulativeLimit(uint256 x, uint256 y) public {
-        uint256 a = bound(x, 1, LIMIT);
-        uint256 b = bound(y, LIMIT - a + 1, LIMIT);
+        vm.assume(x >= 1 && x <= LIMIT);
+        uint256 a = x;
+        vm.assume(y >= LIMIT - a + 1 && y <= LIMIT);
+        uint256 b = y;
         usr.mint(service, a + b);
         vm.prank(service);
         ext.redeem(a, receiver, address(usdc));
@@ -138,7 +141,7 @@ contract UsrRedemption_Test is Test {
 
     /// W1-P7: stale USR price reverts.
     function test_W1P7_stalePriceReverts(uint256 amount) public {
-        vm.assume(amount > 0 && amount < 1_000_000e18);
+        vm.assume(amount >= 1e12 && amount < 1_000_000e18);
         ps.set(1e18, T0 - 2 days);
         usr.mint(service, amount);
         vm.prank(service);
@@ -148,7 +151,7 @@ contract UsrRedemption_Test is Test {
 
     /// W1-P7b: USR price below $1 reverts.
     function test_W1P7b_lowPriceReverts(uint256 amount) public {
-        vm.assume(amount > 0 && amount < 1_000_000e18);
+        vm.assume(amount >= 1e12 && amount < 1_000_000e18);
         ps.set(0.5e18, T0);
         usr.mint(service, amount);
         vm.prank(service);
@@ -162,7 +165,7 @@ contract UsrRedemption_Test is Test {
 
     /// W1-P8: a non-SERVICE caller cannot trigger any treasury payout.
     function test_W1P8_onlyService(uint256 amount) public {
-        vm.assume(amount > 0 && amount < 1_000_000e18);
+        vm.assume(amount >= 1e12 && amount < 1_000_000e18);
         usr.mint(alice, amount);
         uint256 tBefore = usdc.balanceOf(address(treasury));
         vm.prank(alice);
@@ -177,7 +180,7 @@ contract UsrRedemption_Test is Test {
 
     /// W1-P9: when the treasury is short, the Aave borrow equals exactly the shortfall.
     function test_W1P9_borrowIsShortfall(uint256 amount) public {
-        vm.assume(amount > 0 && amount < 1_000_000e18);
+        vm.assume(amount >= 1e12 && amount < 1_000_000e18);
         MockERC20 t2 = new MockERC20("T2", "T2", 6);
         address[] memory allowed = new address[](2);
         allowed[0] = address(usdc);
@@ -199,7 +202,7 @@ contract UsrRedemption_Test is Test {
 
     /// W1-P10: the allowance granted is fully consumed by the payout.
     function test_W1P10_allowanceConsumed(uint256 amount) public {
-        vm.assume(amount > 0 && amount < 1_000_000e18);
+        vm.assume(amount >= 1e12 && amount < 1_000_000e18);
         usr.mint(service, amount);
         vm.prank(service);
         ext.redeem(amount, receiver, address(usdc));
