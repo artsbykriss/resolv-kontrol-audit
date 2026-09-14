@@ -4,3 +4,4 @@ test_W8P1c_withinBoundAccepted
 test_W8P1d_keyOneShot
 test_W8P1e_onlyService
 test_W8P1f_lowerBoundConfig
+test_W7P4_implInitRevertsPriceStorage

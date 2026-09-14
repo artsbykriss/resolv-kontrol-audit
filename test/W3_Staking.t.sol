@@ -14,6 +14,7 @@ contract W3_Staking_Test is Test {
     ResolvStakingV2 internal staking;
 
     address internal constant alice = address(0xA11CE);
+    address internal constant attacker = address(0xBAD);
     uint256 internal constant MAX = type(uint256).max;
     uint256 internal constant COOLDOWN = 14 days;
     uint256 internal constant T0 = 1_800_000_000;
@@ -91,5 +92,59 @@ contract W3_Staking_Test is Test {
         vm.prank(alice);
         staking.initiateWithdrawal(extra);
         assertGe(resolv.balanceOf(address(silo)), amount + extra, "silo solvency");
+    }
+
+
+    function _setupRewards(uint256 rewardAmount) internal returns (MockERC20 rw) {
+        rw = new MockERC20("Reward", "RWD", 18);
+        staking.addRewardToken(rw);
+        staking.setClaimEnabled(true);
+        staking.grantRole(staking.DISTRIBUTOR_ROLE(), address(this));
+        _stake(alice, 1_000e18); // ensure totalEffectiveSupply > 0
+        rw.mint(address(this), rewardAmount);
+        rw.approve(address(staking), rewardAmount);
+        staking.depositReward(address(rw), rewardAmount, 0); // default duration
+    }
+
+    /// W3-P3: an account with no stake cannot claim any reward (no free reward).
+    function test_W3P3_noFreeRewardSameBlock(uint256 rewardAmount) public {
+        vm.assume(rewardAmount >= 1e6 && rewardAmount <= 1e24);
+        MockERC20 rw = _setupRewards(rewardAmount);
+        uint256 before = rw.balanceOf(attacker);
+        vm.prank(attacker);
+        staking.claim(attacker, attacker);
+        assertEq(rw.balanceOf(attacker) - before, 0, "free reward");
+    }
+
+    /// W3-P4: a staker's claim never exceeds the amount deposited to the reward pool.
+    function test_W3P4_claimNeverExceedsPool(uint256 rewardAmount) public {
+        vm.assume(rewardAmount >= 1e6 && rewardAmount <= 1e24);
+        MockERC20 rw = _setupRewards(rewardAmount);
+        vm.warp(T0 + 14 days + 2);
+        uint256 before = rw.balanceOf(alice);
+        vm.prank(alice);
+        staking.claim(alice, alice);
+        uint256 claimed = rw.balanceOf(alice) - before;
+        assertLe(claimed, rewardAmount, "over-distribution");
+    }
+
+    /// W3-P5: rewards cannot be claimed twice for the same accrual.
+    function test_W3P5_rewardNotDoubleClaimed(uint256 rewardAmount) public {
+        vm.assume(rewardAmount >= 1e6 && rewardAmount <= 1e24);
+        MockERC20 rw = _setupRewards(rewardAmount);
+        vm.warp(T0 + 14 days + 2);
+        vm.prank(alice);
+        staking.claim(alice, alice);
+        uint256 afterFirst = rw.balanceOf(alice);
+        vm.prank(alice);
+        staking.claim(alice, alice);
+        assertEq(rw.balanceOf(alice), afterFirst, "double claim");
+    }
+
+    /// W7-P6: a bare staking implementation cannot be initialized by a third party.
+    function test_W7P6_implInitRevertsStaking() public {
+        ResolvStakingV2 impl = new ResolvStakingV2();
+        vm.expectRevert();
+        impl.initialize("Staked RESOLV", "stRESOLV", resolv, silo, COOLDOWN);
     }
 }

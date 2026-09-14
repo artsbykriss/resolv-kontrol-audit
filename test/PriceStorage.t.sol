@@ -80,4 +80,12 @@ contract PriceStorage_Test is Test {
         vm.expectRevert();
         ps.setLowerBoundPercentage(1e18 + 1);
     }
+
+
+    /// W7-P4: bare UsrPriceStorage implementation cannot be initialized by a third party.
+    function test_W7P4_implInitRevertsPriceStorage() public {
+        UsrPriceStorage impl = new UsrPriceStorage();
+        vm.expectRevert();
+        impl.initialize(1e16);
+    }
 }

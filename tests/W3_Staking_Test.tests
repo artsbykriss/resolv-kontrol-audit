@@ -2,3 +2,7 @@ test_W3P1_roundTripNoGain
 test_W3P2_siloSolvency
 test_W3P6_cooldownEnforced
 test_W3P6b_noOverWithdraw
+test_W3P3_noFreeRewardSameBlock
+test_W3P4_claimNeverExceedsPool
+test_W3P5_rewardNotDoubleClaimed
+test_W7P6_implInitRevertsStaking

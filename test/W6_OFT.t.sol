@@ -6,7 +6,7 @@ import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.s
 import {SimpleOFTAdapter} from "contracts/layerzero/SimpleOFTAdapter.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 import {IOFT, SendParam, OFTReceipt} from "@layerzerolabs/oft-evm/contracts/interfaces/IOFT.sol";
-import {MessagingParams, MessagingFee, MessagingReceipt} from
+import {MessagingParams, MessagingFee, MessagingReceipt, Origin} from
     "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroEndpointV2.sol";
 
 /// @dev Minimal LayerZero v2 endpoint stand-in (delegate no-op; send/quote succeed).
@@ -110,5 +110,45 @@ contract W6_OFT_Test is Test {
         vm.prank(alice);
         vm.expectRevert();
         oft.setMsgInspector(address(0x1234));
+    }
+
+
+    /// W6-P5: only the LayerZero endpoint can drive the receive path (no permissionless unlock).
+    function test_W6P5_lzReceiveOnlyEndpoint() public {
+        Origin memory origin = Origin({srcEid: 1, sender: bytes32(uint256(uint160(address(oft)))), nonce: 0});
+        vm.prank(address(0xBAD));
+        vm.expectRevert();
+        oft.lzReceive(origin, bytes32(0), abi.encode(uint256(1e18)), address(0), hex"");
+    }
+
+    /// W6-P6: even the endpoint cannot credit from an unconfigured peer/origin.
+    function test_W6P6_lzReceiveRejectsUnknownPeer() public {
+        Origin memory origin = Origin({srcEid: 1, sender: bytes32(uint256(uint160(address(0xBAD)))), nonce: 0});
+        vm.prank(address(endpoint));
+        vm.expectRevert();
+        oft.lzReceive(origin, bytes32(0), abi.encode(uint256(1e18)), address(0), hex"");
+    }
+
+    /// W6-P7: every send increases the adapter's locked balance by exactly amountSent (never decreases it).
+    function test_W6P7_lockedBacking(uint256 amount) public {
+        vm.assume(amount >= DUST && amount <= 1e30);
+        uint256 sent = amount - (amount % DUST);
+        token.mint(alice, amount);
+        vm.prank(alice);
+        token.approve(address(oft), MAX);
+        MessagingFee memory fee = MessagingFee(0, 0);
+        uint256 before = token.balanceOf(address(oft));
+        vm.prank(alice);
+        oft.send(_sp(amount), fee, alice);
+        assertEq(token.balanceOf(address(oft)) - before, sent, "adapter lock mismatch");
+    }
+
+    /// W7-P5 (KNOWN VULN): the SimpleOFTAdapter constructor does NOT call
+    /// `_disableInitializers()`, so any third party can initialize the bare
+    /// implementation and become its owner. Asserts the vulnerability is present.
+    function test_W7P5_implInitUnprotected_KNOWNVULN() public {
+        SimpleOFTAdapter impl = new SimpleOFTAdapter(address(token), address(endpoint));
+        impl.initialize(address(0xBAD));
+        assertEq(impl.owner(), address(0xBAD), "impl owner not hijacked");
     }
 }

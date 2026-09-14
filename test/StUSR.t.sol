@@ -142,4 +142,12 @@ contract StUSR_Test is ResolvHarness {
         vm.expectRevert();
         stUSR.initialize("x", "x", address(usr));
     }
+
+
+    /// W7-P3: bare StUSR implementation cannot be initialized by a third party.
+    function test_W7P3_implInitRevertsStUSR() public {
+        StUSR impl = new StUSR();
+        vm.expectRevert();
+        impl.initialize("x", "x", address(usr));
+    }
 }

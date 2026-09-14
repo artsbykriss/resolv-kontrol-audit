@@ -7,3 +7,4 @@ test_W2P5b_transferFromAllowanceBounded
 test_W2P6_inflationNoProfit
 test_W2P7_totalSupplyMatchesBalance
 test_W7P1_reinitializeReverts
+test_W7P3_implInitRevertsStUSR

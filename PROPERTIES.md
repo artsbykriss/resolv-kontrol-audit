@@ -122,3 +122,39 @@ Assumes: `USR` decimals 18; `PRICE_SCALING_FACTOR = 1e18`; token decimals 6 or 1
 | `test/Invariants.t.sol` | X-P1..P4 |
 
 **Priority order for the first proof run:** W2 (permissionless, no roles) → W1 → W4 → W3.
+
+---
+
+## Round 2 additions (high-risk permissionless coverage)
+
+| ID | Target | Entry | Property | Class | Falsify by |
+|---|---|---|---|---|---|
+| W3-P3 | staking | `claim` | An account with no stake cannot claim any reward (no free reward). | P | attacker with 0 stake gains reward tokens |
+| W3-P4 | staking | `claim` | A staker's claim never exceeds the amount deposited into the reward pool. | P | over-distribution > deposit |
+| W3-P5 | staking | `claim` | Rewards cannot be claimed twice for the same accrual. | P | second claim gains > 0 |
+| W6-P5 | SimpleOFTAdapter | `lzReceive` | Only the LayerZero endpoint can drive the receive path (no permissionless unlock). | P | non-endpoint call reaches `_credit` |
+| W6-P6 | SimpleOFTAdapter | `lzReceive` | Even the endpoint cannot credit from an unconfigured peer/origin. | P | unknown peer accepted |
+| W6-P7 | SimpleOFTAdapter | `send` | Every send increases the adapter's locked balance by exactly `amountSent` (never decreases). | P | adapter lock mismatch / under-backing |
+| W7-P4 | UsrPriceStorage | `initialize` | Bare implementation cannot be initialized (`_disableInitializers`). | P | impl initialized |
+| W7-P5 | SimpleOFTAdapter | `initialize` | Bare implementation cannot be initialized. | P | **FAILS — see FINDING-OFT-01** |
+| W7-P6 | ResolvStakingV2 | `initialize` | Bare implementation cannot be initialized. | P | impl initialized |
+| W7-P7 | StUSR | `initialize` | Bare implementation cannot be initialized. | P | impl initialized |
+
+### Test mapping (round 2)
+| File | New properties |
+|---|---|
+| `test/W3_Staking.t.sol` | W3-P3/P4/P5, W7-P6 |
+| `test/W6_OFT.t.sol` | W6-P5/P6/P7, W7-P5 |
+| `test/StUSR.t.sol` | W7-P7 (`test_W7P3_implInitRevertsStUSR`) |
+| `test/PriceStorage.t.sol` | W7-P4 (`test_W7P4_implInitRevertsPriceStorage`) |
+
+### Still-uncovered (documented gaps — NOT passes)
+- Staking effective-balance **boost gaming** across multi-step deposit/withdraw cycles (needs a
+  stateful/BMC property; current reward tests are per-call only).
+- OFT **receive-path value flow** with an *authentic* endpoint/peer (our endpoint is a mock; we only
+  prove the endpoint/peer gating, not the credit accounting).
+- **Malicious/fee-on-transfer/reentrant withdrawal token** in `redeem` (SERVICE-gated, so lower risk).
+- **Permit** (`depositWithPermit`) replay/malleability.
+- **Blacklist bypass** via `approve`+`transferFrom` / `wrap` / `unwrap`.
+- **wstUSR-specific donation/inflation** (only stUSR `W2P6` executed).
+- A true **X-P1 attacker-profit** goal with the **real** USR/RLP token (mocks are free-mint).
