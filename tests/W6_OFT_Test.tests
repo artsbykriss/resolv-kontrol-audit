@@ -1,0 +1,6 @@
+test_W6P1_sendInsufficientBalanceReverts
+test_W6P1b_sendInsufficientAllowanceReverts
+test_W6P1c_sendLocksExactAmount
+test_W6P2_setPeerOnlyOwner
+test_W6P3_tokenAndApproval
+test_W6P4_configOnlyOwner

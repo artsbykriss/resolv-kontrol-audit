@@ -64,32 +64,48 @@ jobs:
             kontrol build 2>&1 | tee build_output.log | tail -5
           sudo chown -R "$(id -u):$(id -g)" .
 
-      - name: kontrol prove (suite)
+      # NOTE: `kontrol prove` (1.0.255) has NO `--match-contract`; it only
+      # accepts `--match-test` (a regex matched against the bare function
+      # name). We therefore drive one invocation per test from the checked-in
+      # `tests/<Suite>.tests` list — the same proven pattern as the main
+      # campaign — which also bounds each proof and checkpoints its KCFG.
+      - name: kontrol prove (one invocation per test)
         run: |
           set +e
-          V="verdicts_${{ matrix.suite }}.txt"; : > "$V"
+          SUITE="${{ matrix.suite }}"
+          TESTS_FILE="tests/${SUITE}.tests"
+          V="verdicts_${SUITE}.txt"; : > "$V"
+          chmod -R a+rwX . 2>/dev/null || true
           PROVE_OPTS="--use-booster --no-break-on-calls --no-stack-checks --no-log-rewrites \
             --max-frontier-parallel 2 --max-depth 50000 --max-iterations 100000 \
             --smt-timeout 30000 --smt-retry-limit 2 --workers 2 --step-timeout 600 \
             --auto-abstract-gas"
-          echo "=== ${{ matrix.suite }} ===" | tee -a "$V"
-          timeout -k 30s 2400s docker run --rm -v "$PWD":/work -w /work \
-            "$KONTROL_IMAGE" \
-            kontrol prove --match-contract "${{ matrix.suite }}" $PROVE_OPTS \
-            > "prove_${{ matrix.suite }}.log" 2>&1
-          rc=$?
-          if grep -qE 'PROOF (PASSED|FAILED)' "prove_${{ matrix.suite }}.log"; then
-            grep -E 'PROOF (PASSED|FAILED)' "prove_${{ matrix.suite }}.log" >> "$V"
-          elif [ "$rc" -eq 124 ]; then
-            echo "=== ${{ matrix.suite }} INCOMPLETE (wall-timeout; kcfg checkpointed) ===" >> "$V"
-          elif grep -qE 'CHEATCODE_UNIMPLEMENTED|[Uu]nimplemented|Exception|Fatal' "prove_${{ matrix.suite }}.log"; then
-            echo "=== ${{ matrix.suite }} INCOMPLETE (abort; kcfg checkpointed) ===" >> "$V"
-          else
-            echo "=== ${{ matrix.suite }} INCOMPLETE (rc=$rc; kcfg checkpointed) ===" >> "$V"
-          fi
-          sudo chown -R "$(id -u):$(id -g)" . || true
+          echo "=== ${SUITE} ===" | tee -a "$V"
+          NTESTS=$(grep -c . "$TESTS_FILE")
+          # Whole-suite budget 300m (< 350m job cap); cap each proof at 35m so a
+          # single hard test cannot consume the entire suite.
+          BUDGET=$(( 300 * 60 / NTESTS )); [ "$BUDGET" -gt 2100 ] && BUDGET=2100
+          while IFS= read -r t; do
+            [ -z "$t" ] && continue
+            echo "=== ${SUITE}: $t ===" | tee -a "$V" "prove_${SUITE}.log"
+            timeout -k 30s "${BUDGET}s" docker run --rm -v "$PWD":/work -w /work \
+              "$KONTROL_IMAGE" \
+              kontrol prove --match-test "${t}" $PROVE_OPTS > /tmp/prove_one.log 2>&1
+            rc=$?
+            cat /tmp/prove_one.log >> "prove_${SUITE}.log"
+            if grep -qE 'PROOF (PASSED|FAILED)' /tmp/prove_one.log; then
+              grep -E 'PROOF (PASSED|FAILED)' /tmp/prove_one.log >> "$V"
+            elif [ "$rc" -eq 124 ]; then
+              echo "=== ${t} INCOMPLETE (wall-timeout; kcfg checkpointed) ===" >> "$V"
+            elif grep -qE 'CHEATCODE_UNIMPLEMENTED|[Uu]nimplemented|Exception|Fatal' /tmp/prove_one.log; then
+              echo "=== ${t} INCOMPLETE (abort; kcfg checkpointed) ===" >> "$V"
+            else
+              echo "=== ${t} INCOMPLETE (rc=$rc; kcfg checkpointed) ===" >> "$V"
+            fi
+            sudo chown -R "$(id -u):$(id -g)" . 2>/dev/null || true
+          done < "$TESTS_FILE"
           if [ -d out/proofs ]; then
-            tar -czf "kcfg_${{ matrix.suite }}.tgz" -C out proofs || true
+            tar -czf "kcfg_${SUITE}.tgz" -C out proofs || true
           fi
 
       - name: Extract verdicts

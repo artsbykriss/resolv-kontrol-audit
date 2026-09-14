@@ -1,0 +1,5 @@
+test_W5P1_recipientIsProvider
+test_W5P2_burnAllowanceConsumed
+test_W5P3_protocolDepositBurnedFromTreasury
+test_W5P4_onlyService
+test_W5P5_nonProtocolDepositNoBurn

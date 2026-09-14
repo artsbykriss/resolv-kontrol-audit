@@ -1,0 +1,9 @@
+test_W1P10_allowanceConsumed
+test_W1P1_exactPayout
+test_W1P1b_neverExceedsBurned
+test_W1P2_limitEnforced
+test_W1P2b_cumulativeLimit
+test_W1P7_stalePriceReverts
+test_W1P7b_lowPriceReverts
+test_W1P8_onlyService
+test_W1P9_borrowIsShortfall

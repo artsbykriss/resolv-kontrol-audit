@@ -162,8 +162,8 @@ contract WstUSR_Test is ResolvHarness {
     // W7
     // ------------------------------------------------------------------
 
-    /// W7-P1/P2: no re-initialization.
-    function test_W7P1_reinitializeReverts() public {
+    /// W7-P2: no re-initialization.
+    function test_W7P2_reinitializeReverts() public {
         vm.expectRevert();
         wstUSR.initialize("x", "x", address(stUSR));
         vm.expectRevert();
